@@ -8,11 +8,17 @@ class Connection
 {
     public \PDO $PDO;
 
+    /**
+     * @param Config $config
+     */
     public function __construct(Config $config)
     {
         $this->connect($config);
     }
 
+    /**
+     * @return \PDO
+     */
     public function get(): \PDO
     {
         return $this->PDO;
