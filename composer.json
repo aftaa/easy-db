@@ -1,0 +1,11 @@
+{
+    "name": "aftaa/easy-db",
+    "description": "test",
+    "authors": [
+        {
+            "name": "Maxim Gabidullin",
+            "email": "after@ya.ru"
+        }
+    ],
+    "require": {}
+}
