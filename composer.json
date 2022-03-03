@@ -7,5 +7,6 @@
             "email": "after@ya.ru"
         }
     ],
-    "require": {}
+    "require": {},
+    "license": "MIT"
 }
