@@ -4,7 +4,7 @@ namespace common\db;
 
 use app\config\db\connection\Config;
 
-class Connection implements ConnectionInterface
+class Connection
 {
     public \PDO $PDO;
 
