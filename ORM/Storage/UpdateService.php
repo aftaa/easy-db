@@ -33,12 +33,12 @@ class UpdateService
                 continue;
             }
 
-            if (\DateTimeImmutable::class == $propertyReflection->getType()) {
+            if (\DateTimeImmutable::class == $propertyReflection->getType()->getName()) {
                 $value = $value->format('Y-m-d h:i:s');
             }
 
             if (\DateTime::class == $propertyReflection->getType()) {
-                $value = $value->format('Y-m-d h-i-s');
+                $value = $value->format('Y-m-d h:i:s');
             }
 
             $typeName = $propertyReflection->getType()->getName();
