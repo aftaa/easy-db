@@ -27,20 +27,20 @@ class Entity
      */
     public function oneToMany(string $refStorage, string $refColumn): array
     {
-        $storage = $this->getStorage($refStorage);
-        return $storage->select("{$refColumn} = :id", [':id' => $this->id]);
+        return $this->getStorage($refStorage)->select("{$refColumn} = :id", [':id' => $this->id]);
     }
 
     /**
      * @param string $refColumn
      * @param string $refStorage
-     * @return object
+     * @return object|null
      * @throws \ReflectionException
      */
-    protected function manyToOne(string $refColumn, string $refStorage): object
+    protected function manyToOne(string $refColumn, string $refStorage): ?object
     {
+        /** @var Storage $storage */
         $storage = $this->getStorage($refStorage);
-        $entity = $storage->selectOne($this->$refColumn);
+        $entity = $storage->selectOne($this->$refColumn)->asEntity();
         return $entity;
     }
 

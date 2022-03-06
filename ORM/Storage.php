@@ -86,13 +86,12 @@ class Storage
     }
 
     /**
-     * @return array
+     * @return QueryResult
      * @throws \ReflectionException
      */
-    public function selectAll(): array
+    public function selectAll(): QueryResult
     {
-        $results = $this->createQueryBuilder()->getQuery()->getResults();
-        return $results;
+        return $this->createQueryBuilder()->getQuery()->getResults();
     }
 
     /**
@@ -110,7 +109,7 @@ class Storage
      */
     public function select(string $where, array $param): array
     {
-        /** @var QueryBuilder $queryBuilder */
+        /** @var \common\db\DBAL\QueryBuilder $queryBuilder */
         $queryBuilder = $this->createQueryBuilder()->where($where);
             foreach ($param as $name => $value) {
                 $queryBuilder->setParam($name, $value);

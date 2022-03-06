@@ -3,31 +3,34 @@
 namespace common\db\DBAL;
 
 use common\db\Connection;
-use common\db\ORM\Cell;
-use common\db\ORM\DocComment;
-use common\db\QueryProfiler;
+use DateTime;
+use DateTimeImmutable;
+use Exception;
+use PDO;
+use ReflectionException;
+use ReflectionProperty;
 
 class QueryResult
 {
     private string $query;
     private string $entity;
     private array $params;
+    private array $result;
 
     /**
      * @param Connection $connection
      */
     public function __construct(
-        private Connection    $connection,
-        private QueryProfiler $queryProfiler,
+        private Connection $connection,
     )
     {
     }
 
     /**
      * @param array $params
-     * @return void
+     * @return $this
      */
-    public function setParams(array $params)
+    public function setParams(array $params): self
     {
         $this->params = $params;
         return $this;
@@ -56,22 +59,28 @@ class QueryResult
     /**
      * @param array $datum
      * @return object
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
     public function transformToEntity(array $datum): object
     {
         $row = new $this->entity;
         foreach ($datum as $name => $value) {
 
-            $reflectionProperty = new \ReflectionProperty($this->entity, $name);
+            $reflectionProperty = new ReflectionProperty($this->entity, $name);
 
-            if ($reflectionProperty->getType()->getName() == \DateTimeImmutable::class) {
-                $row->$name = $value ? new \DateTimeImmutable($value) : null;
+            if ($reflectionProperty->getType()->getName() == DateTimeImmutable::class) {
+                try {
+                    $row->$name = $value ? new DateTimeImmutable($value) : null;
+                } catch (Exception) {
+                }
                 continue;
             }
 
-            if ($reflectionProperty->getType()->getName() == \DateTime::class) {
-                $row->$name = $value ? new \DateTime($value) : null;
+            if ($reflectionProperty->getType()->getName() == DateTime::class) {
+                try {
+                    $row->$name = $value ? new DateTime($value) : null;
+                } catch (Exception) {
+                }
                 continue;
             }
 
@@ -87,43 +96,57 @@ class QueryResult
     }
 
     /**
-     * @param bool $transformToEntity
-     * @return mixed
-     * @throws \ReflectionException
+     * @return $this|null
      */
-    public function getResult(bool $transformToEntity = true): mixed
+    public function getResult(): ?self
     {
         $stmt = $this->connection->get()->prepare($this->query);
         $stmt->execute($this->params);
-        $data = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$data) {
             return null;
         }
-        if ($transformToEntity) {
-            return $this->transformToEntity($data);
-        }
-        return $data;
+        $this->result = $data;
+        return $this;
     }
 
     /**
-     * @param bool $transformToEntity
-     * @return array
-     * @throws \ReflectionException
+     * @return $this
      */
-    public function getResults(bool $transformToEntity = true): array
+    public function getResults(): self
     {
         $stmt = $this->connection->get()->prepare($this->query);
         $stmt->execute($this->params);
-        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        $table = [];
+        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->result = $data;
+        return $this;
+    }
 
-        if ($transformToEntity) {
-            foreach ($data as $datum) {
-                $row = $this->transformToEntity($datum);
-                $table[] = $row;
-            }
-        } else {
-            $table = $data;
+    /**
+     * @throws ReflectionException
+     */
+    public function asEntity(): object
+    {
+        return $this->transformToEntity($this->result);
+    }
+
+    /**
+     * @return array
+     */
+    public function asArray(): array
+    {
+        return $this->result;
+    }
+
+    /**
+     * @return array
+     * @throws ReflectionException
+     */
+    public function asEntities(): array
+    {
+        $table = [];
+        foreach ($this->result as $row) {
+            $table[] = $this->transformToEntity($row);
         }
         return $table;
     }
